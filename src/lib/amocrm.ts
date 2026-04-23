@@ -29,7 +29,20 @@ const searchData = searchText ? JSON.parse(searchText) : {};
   // Create deal
   const dealRes = await fetch(`${base}/leads`, {
     method: "POST", headers,
-    body: JSON.stringify([{ name: params.name, price: params.budget || 0, _embedded: { contacts: [{ id: contactId }] } }]),
+body: JSON.stringify([{
+  name: params.name,
+  price: params.budget || 0,
+  custom_fields_values: [
+    {
+      field_id: 905575,
+      values: [{ value: Math.floor(Date.now() / 1000) }]
+    },
+    ...(params.deadline ? [{
+      field_id: 902875,
+      values: [{ value: Math.floor(new Date(params.deadline).getTime() / 1000) }]
+    }] : []),
+  ],
+  _embedded: { contacts: [{ id: contactId }] }
   });
   const dealData = await dealRes.json();
   console.log('amoCRM deal response:', JSON.stringify(dealData));
