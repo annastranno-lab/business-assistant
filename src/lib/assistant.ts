@@ -104,13 +104,10 @@ async function executeTool(name: string, input: any, userChatId: number): Promis
   return "Инструмент не найден.";
 }
 
-export async function processAssistantMessage(userChatId: number, userText: string): Promise<string> {
-  await saveConversation(userChatId, "user", userText);
+export async function processAssistantMessage(userChatId: number, userText: string, businessConnectionId?: string | null): Promise<string> {  await saveConversation(userChatId, "user", userText);
   const history = await getConversationHistory(userChatId, 10);
 
-  const msgs = await getMessages(4);
-  const recentContext = msgs.slice(-10).map(m => `${m.from_name}: ${m.message_text}`).join("\n");
-
+const msgs = await getMessages(4, businessConnectionId);
   const systemPrompt = `Ты — AI-ассистент для управления рабочими задачами и заказами.
 Помогаешь отвечать на вопросы о переписках, создавать сделки в amoCRM, генерировать ТЗ для команды.
 
