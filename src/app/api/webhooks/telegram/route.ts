@@ -48,13 +48,8 @@ export async function POST(request: Request) {
           const p = pending.payload;
           try {
             const { dealId, dealUrl } = await createDeal({ name: p.service_name, budget: p.budget, deadline: p.deadline, clientName: p.client_name });
-            await sendMessage(chatId, `✅ Сделка создана!\n\n[Открыть в amoCRM](${dealUrl})\n\nГенерирую ТЗ для команды...`);
-
-            // Generate TZ
-            const msgs = await getMessages(72);
-            const clientMsgs = msgs.filter(m => m.from_name?.toLowerCase().includes(p.client_name.toLowerCase())).map(m => `${m.from_name}: ${m.message_text}`);
-            const tz = await generateTZ({ clientName: p.client_name, serviceName: p.service_name, messages: clientMsgs, budget: p.budget, deadline: p.deadline });
-            await sendMessage(chatId, tz);
+          await sendMessage(chatId, `✅ Сделка создана!\n\n[Открыть в amoCRM](${dealUrl})`);
+            
           } catch (e) {
             await sendMessage(chatId, "❌ Ошибка создания сделки. Проверьте настройки amoCRM.");
           }
