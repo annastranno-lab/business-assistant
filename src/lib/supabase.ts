@@ -23,7 +23,7 @@ export async function getMessages(hoursBack: number, businessConnectionId?: stri
   const url = requireEnv("SUPABASE_URL");
   const key = requireEnv("SUPABASE_SECRET_KEY");
   const since = new Date(Date.now() - hoursBack * 3600 * 1000).toISOString();
-const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : `&business_connection_id=is.null`;
+const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : ``;
 const res = await fetch(`${url}/rest/v1/messages?received_at=gte.${since}&order=received_at.asc${filter}`, {    headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
   if (!res.ok) throw new Error(`Supabase SELECT failed: ${res.status}`);
