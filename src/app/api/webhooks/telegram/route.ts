@@ -102,7 +102,7 @@ export async function POST(request: Request) {
 
       if (!text) return NextResponse.json({ ok: true });
 
-      const response = await processAssistantMessage(chatId, text);
+const response = await processAssistantMessage(chatId, text, msg.business_connection_id || null);
       if (response) await sendMessage(chatId, response);
     }
 
