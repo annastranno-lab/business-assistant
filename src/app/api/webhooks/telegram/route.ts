@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { insertMessage, getPendingAction, deletePendingAction, upsertBusinessConnection, getOwnerByConnection } from "@/lib/supabase";
+import { insertMessage, getPendingAction, deletePendingAction, upsertBusinessConnection, getOwnerByConnection, clearConversationHistory } from "@/lib/supabase";
 import { transcribeVoice } from "@/lib/transcribe";
 import { processAssistantMessage } from "@/lib/assistant";
 import { sendMessage, answerCallbackQuery } from "@/lib/telegram";
@@ -59,9 +59,11 @@ export async function POST(request: Request) {
             await sendMessage(chatId, "❌ Ошибка создания сделки. Проверьте настройки amoCRM.");
           }
           await deletePendingAction(chatId);
+          await clearConversationHistory(chatId);
         }
-      } else if (cq.data === "cancel_deal") {
+    } else if (cq.data === "cancel_deal") {
         await deletePendingAction(chatId);
+        await clearConversationHistory(chatId);
         await sendMessage(chatId, "Отменено.");
       }
 
