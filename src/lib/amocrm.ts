@@ -21,6 +21,7 @@ export async function createDeal(params: {
       body: JSON.stringify([{ name: params.clientName }]),
     });
     const ccData = await cc.json();
+    console.log('amoCRM create contact response:', JSON.stringify(ccData));
     contactId = ccData._embedded.contacts[0].id;
   }
 
