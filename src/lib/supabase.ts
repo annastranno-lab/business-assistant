@@ -147,3 +147,12 @@ export async function getOwnerByConnection(connectionId: string): Promise<number
   const data = await res.json();
   return data[0]?.owner_user_id ?? null;
 }
+
+export async function clearConversationHistory(chatId: number): Promise<void> {
+  const url = requireEnv("SUPABASE_URL");
+  const key = requireEnv("SUPABASE_SECRET_KEY");
+  await fetch(`${url}/rest/v1/conversations?user_chat_id=eq.${chatId}`, {
+    method: "DELETE",
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+}
