@@ -10,6 +10,7 @@ export async function createDeal(params: {
   // Find or create contact
   const searchRes = await fetch(`${base}/contacts?query=${encodeURIComponent(params.clientName)}`, { headers });
   const searchData = await searchRes.json();
+  console.log('amoCRM search response:', JSON.stringify(searchData));
   let contactId: number;
 
   if (searchData._embedded?.contacts?.length > 0) {
@@ -29,6 +30,7 @@ export async function createDeal(params: {
     body: JSON.stringify([{ name: params.name, price: params.budget || 0, _embedded: { contacts: [{ id: contactId }] } }]),
   });
   const dealData = await dealRes.json();
+  console.log('amoCRM deal response:', JSON.stringify(dealData));
   const dealId = dealData._embedded.leads[0].id;
   return { dealId, dealUrl: `https://${subdomain}.amocrm.ru/leads/detail/${dealId}` };
 }
