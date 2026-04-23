@@ -105,6 +105,8 @@ async function executeTool(name: string, input: any, userChatId: number): Promis
 }
 
 export async function processAssistantMessage(userChatId: number, userText: string, ownerUserId?: number | null): Promise<string> {  const history = await getConversationHistory(userChatId, 10);
+await saveConversation(userChatId, "user", userText);
+const history = await getConversationHistory(userChatId, 10);
 const msgs = await getMessages(4, ownerUserId);
 const recentContext = msgs.slice(-10).map(m => `${m.from_name}: ${m.message_text}`).join("\n");
 const systemPrompt = `Ты — AI-ассистент для управления рабочими задачами и заказами.
@@ -128,7 +130,10 @@ ${recentContext || "Нет недавних сообщений"}
   });
 
   const data = await res.json();
-
+if (data.error) {
+    console.error('Anthropic API error:', JSON.stringify(data.error));
+    return `Ошибка API: ${data.error.message}`;
+  }
   // Check for tool use
   const toolUse = data.content?.find((b: any) => b.type === "tool_use");
   if (toolUse) {
