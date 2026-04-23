@@ -24,10 +24,20 @@ export async function getMessages(hoursBack: number, businessConnectionId?: stri
   const key = requireEnv("SUPABASE_SECRET_KEY");
   const since = new Date(Date.now() - hoursBack * 3600 * 1000).toISOString();
 const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : ``;
-const res = await fetch(`${url}/rest/v1/messages?received_at=gte.${since}&order=received_at.asc${filter}`, {    headers: { apikey: key, Authorization: `Bearer ${key}` },
+const res = await fetch(`${url}/rest/v1/messages?received_at=gte.${since}&is_processed=eq.false&order=received_at.asc${filter}`, {
   });
   if (!res.ok) throw new Error(`Supabase SELECT failed: ${res.status}`);
   return res.json();
+}
+export async function markMessagesAsProcessed(businessConnectionId?: string | null): Promise<void> {
+  const url = requireEnv("SUPABASE_URL");
+  const key = requireEnv("SUPABASE_SECRET_KEY");
+  const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : `&business_connection_id=is.null`;
+  await fetch(`${url}/rest/v1/messages?is_processed=eq.false${filter}`, {
+    method: "PATCH",
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ is_processed: true }),
+  });
 }
 
 export async function savePendingAction(chatId: number, actionType: string, payload: any): Promise<void> {
