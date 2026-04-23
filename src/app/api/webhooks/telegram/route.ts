@@ -86,9 +86,6 @@ export async function POST(request: Request) {
     if (body.message) {
       const msg = body.message;
       const chatId = msg.chat.id;
-      const isMe = String(chatId) === String(MY_CHAT_ID);
-
-      if (!isMe) return NextResponse.json({ ok: true });
 
       let text = msg.text || null;
 
