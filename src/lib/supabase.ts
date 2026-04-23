@@ -25,6 +25,7 @@ export async function getMessages(hoursBack: number, businessConnectionId?: stri
   const since = new Date(Date.now() - hoursBack * 3600 * 1000).toISOString();
 const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : ``;
 const res = await fetch(`${url}/rest/v1/messages?received_at=gte.${since}&is_processed=eq.false&order=received_at.asc${filter}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
   if (!res.ok) throw new Error(`Supabase SELECT failed: ${res.status}`);
   return res.json();
