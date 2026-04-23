@@ -9,8 +9,9 @@ export async function createDeal(params: {
 
   // Find or create contact
   const searchRes = await fetch(`${base}/contacts?query=${encodeURIComponent(params.clientName)}`, { headers });
-  const searchData = await searchRes.json();
-  console.log('amoCRM search response:', JSON.stringify(searchData));
+const searchText = await searchRes.text();
+console.log('amoCRM search status:', searchRes.status, 'body:', searchText);
+const searchData = searchText ? JSON.parse(searchText) : {};
   let contactId: number;
 
   if (searchData._embedded?.contacts?.length > 0) {
