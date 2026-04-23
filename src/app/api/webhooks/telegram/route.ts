@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { insertMessage, getPendingAction, deletePendingAction } from "@/lib/supabase";
+import { insertMessage, getPendingAction, deletePendingAction, upsertBusinessConnection, getOwnerByConnection } from "@/lib/supabase";
 import { transcribeVoice } from "@/lib/transcribe";
 import { processAssistantMessage } from "@/lib/assistant";
 import { sendMessage, answerCallbackQuery } from "@/lib/telegram";
@@ -17,7 +17,16 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
+// Handle business connection event
+    if (body.business_connection) {
+      const conn = body.business_connection;
+      await upsertBusinessConnection(
+        conn.id,
+        conn.user.id,
+        conn.user.first_name ?? "Unknown"
+      );
+      return NextResponse.json({ ok: true });
+    }
     // Check reminders on every request
     try {
       const reminders = await getPendingReminders();
@@ -69,12 +78,15 @@ export async function POST(request: Request) {
         try { text = await transcribeVoice(msg.voice.file_id); } catch {}
       }
 
+     const ownerUserId = await getOwnerByConnection(msg.business_connection_id);
+
       await insertMessage({
         chat_id: msg.chat.id,
         from_name: msg.from ? `${msg.from.first_name || ""} ${msg.from.last_name || ""}`.trim() : null,
         from_username: msg.from?.username || null,
         message_text: text,
         business_connection_id: msg.business_connection_id,
+        owner_user_id: ownerUserId,
         chat_type: msg.chat.type,
         chat_title: msg.chat.title || null,
         source: "telegram",
@@ -102,8 +114,10 @@ export async function POST(request: Request) {
 
       if (!text) return NextResponse.json({ ok: true });
 
-const response = await processAssistantMessage(chatId, text, msg.business_connection_id || null);
-      if (response) await sendMessage(chatId, response);
+const ownerUserId = msg.business_connection_id
+  ? await getOwnerByConnection(msg.business_connection_id)
+  : null;
+const response = await processAssistantMessage(chatId, text, ownerUserId);      if (response) await sendMessage(chatId, response);
     }
 
     return NextResponse.json({ ok: true });
