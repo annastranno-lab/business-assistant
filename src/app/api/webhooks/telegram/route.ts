@@ -115,6 +115,25 @@ export async function POST(request: Request) {
       }
 
       if (!text) return NextResponse.json({ ok: true });
+      // Handle forwarded message — save as client message
+      if (msg.forward_origin) {
+        const forwardName = msg.forward_origin.sender_user
+          ? `${msg.forward_origin.sender_user.first_name || ""} ${msg.forward_origin.sender_user.last_name || ""}`.trim()
+          : msg.forward_origin.sender_name || "Неизвестный";
+        await insertMessage({
+          chat_id: msg.forward_origin.sender_user?.id || msg.chat.id,
+          from_name: forwardName,
+          from_username: msg.forward_origin.sender_user?.username || null,
+          message_text: text,
+          business_connection_id: null,
+          owner_user_id: null,
+          chat_type: "private",
+          chat_title: null,
+          source: "forwarded",
+        });
+        await sendMessage(chatId, `✅ Сохранил сообщение от *${forwardName}*`);
+        return NextResponse.json({ ok: true });
+      }
 
 const ownerUserId = msg.business_connection_id
   ? await getOwnerByConnection(msg.business_connection_id)
