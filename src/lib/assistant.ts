@@ -92,12 +92,21 @@ async function executeTool(name: string, input: any, userChatId: number): Promis
     return `PENDING_CONFIRMATION:create_deal:${JSON.stringify(input)}`;
   }
 
-  if (name === "generate_tz") {
-    const msgs = await getMessages(72);
+ if (name === "generate_tz") {
+    const msgs = await getMessages(720); // 30 дней
+    const q = input.client_name.toLowerCase();
     const clientMsgs = msgs
-      .filter(m => m.from_name?.toLowerCase().includes(input.client_name.toLowerCase()))
+      .filter(m => 
+        m.from_name?.toLowerCase().includes(q) ||
+        m.from_username?.toLowerCase().includes(q) ||
+        m.message_text?.toLowerCase().includes(q)
+      )
       .map(m => `${m.from_name}: ${m.message_text}`);
-    const tz = await generateTZ({ clientName: input.client_name, serviceName: input.service_name, messages: clientMsgs });
+    const tz = await generateTZ({ 
+      clientName: input.client_name, 
+      serviceName: input.service_name, 
+      messages: clientMsgs.length > 0 ? clientMsgs : ["Переписка не найдена — составь ТЗ на основе названия услуги"]
+    });
     return tz;
   }
 
