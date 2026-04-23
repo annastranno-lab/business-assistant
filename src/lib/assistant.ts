@@ -1,4 +1,4 @@
-import { getMessages, saveConversation, getConversationHistory, savePendingAction, markMessagesAsProcessed } from "./supabase";
+import { getMessages, saveConversation, getConversationHistory, savePendingAction } from "./supabase";
 import { generateTZ } from "./generate-tz";
 import { createDeal } from "./amocrm";
 import { sendMessage } from "./telegram";
@@ -108,7 +108,6 @@ export async function processAssistantMessage(userChatId: number, userText: stri
   const history = await getConversationHistory(userChatId, 10);
 
 const msgs = await getMessages(4, businessConnectionId);
-await markMessagesAsProcessed(businessConnectionId);
 const recentContext = msgs.slice(-10).map(m => `${m.from_name}: ${m.message_text}`).join("\n");
   const systemPrompt = `Ты — AI-ассистент для управления рабочими задачами и заказами.
 Помогаешь отвечать на вопросы о переписках, создавать сделки в amoCRM, генерировать ТЗ для команды.
