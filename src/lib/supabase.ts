@@ -8,6 +8,7 @@ export async function insertMessage(msg: {
   chat_id: number; from_name: string | null; from_username: string | null;
   message_text: string | null; business_connection_id: string | null;
   chat_type: string; chat_title: string | null; source?: string;
+  owner_user_id?: number | null;
 }): Promise<void> {
   const url = requireEnv("SUPABASE_URL");
   const key = requireEnv("SUPABASE_SECRET_KEY");
@@ -19,11 +20,11 @@ export async function insertMessage(msg: {
   if (!res.ok) throw new Error(`Supabase INSERT failed: ${res.status} ${await res.text()}`);
 }
 
-export async function getMessages(hoursBack: number, businessConnectionId?: string | null): Promise<any[]> {
+export async function getMessages(hoursBack: number, ownerUserId?: number | null): Promise<any[]> {
   const url = requireEnv("SUPABASE_URL");
   const key = requireEnv("SUPABASE_SECRET_KEY");
   const since = new Date(Date.now() - hoursBack * 3600 * 1000).toISOString();
-const filter = businessConnectionId ? `&business_connection_id=eq.${businessConnectionId}` : ``;
+  const filter = ownerUserId ? `&owner_user_id=eq.${ownerUserId}` : ``;
 const res = await fetch(`${url}/rest/v1/messages?received_at=gte.${since}&is_processed=eq.false&order=received_at.asc${filter}`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
@@ -118,4 +119,31 @@ export async function markReminderSent(id: string): Promise<void> {
     headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ sent: true }),
   });
+}
+
+export async function upsertBusinessConnection(
+  connectionId: string, ownerUserId: number, ownerName: string
+): Promise<void> {
+  const url = requireEnv("SUPABASE_URL");
+  const key = requireEnv("SUPABASE_SECRET_KEY");
+  await fetch(`${url}/rest/v1/business_connections`, {
+    method: "POST",
+    headers: {
+      apikey: key, Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "resolution=merge-duplicates",
+    },
+    body: JSON.stringify({ connection_id: connectionId, owner_user_id: ownerUserId, owner_name: ownerName }),
+  });
+}
+
+export async function getOwnerByConnection(connectionId: string): Promise<number | null> {
+  const url = requireEnv("SUPABASE_URL");
+  const key = requireEnv("SUPABASE_SECRET_KEY");
+  const res = await fetch(
+    `${url}/rest/v1/business_connections?connection_id=eq.${connectionId}&limit=1`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+  );
+  const data = await res.json();
+  return data[0]?.owner_user_id ?? null;
 }
